@@ -57,7 +57,43 @@ function draw(data) {
   // 选择颜色
   function getColor(d) {
     var r = 0.0;
-    if (changeable_color) {
+    // NOTE:新增按照value数值区间着色
+    if (changeable_color && config.color_by_value) {
+      var colorRange;
+      if (d[divide_color_by] <= config.num_range[0]) {
+        colorRange = d3.interpolateCubehelix(config.color_range[0]);
+        return colorRange(1);
+      } else if (d[divide_color_by] <= config.num_range[1]) {
+        colorRange = d3.interpolateCubehelix(config.color_range[1]);
+        return colorRange(1);
+      } else if (d[divide_color_by] <= config.num_range[2]) {
+        colorRange = d3.interpolateCubehelix(config.color_range[2]);
+        return colorRange(1);
+      } else if (d[divide_color_by] <= config.num_range[3]) {
+        colorRange = d3.interpolateCubehelix(config.color_range[3]);
+        return colorRange(1);
+      } else {
+        colorRange = d3.interpolateCubehelix(config.color_range[3]);
+        return colorRange(1);
+      }
+      // 原设置且非value数值着色，使用颜色表前两值
+      if (changeable_color && !config.color_by_value) {
+        var colorRange = d3.interpolateCubehelix(config.color_range[0], config.color_range[1]);
+        if (divide_changeable_color_by_type && d["type"] in config.color_ranges) {
+          var colorRange = d3.interpolateCubehelix(config.color_ranges[d["type"]][0], config.color_ranges[d["type"]][1]);
+        }
+        var v =
+            Math.abs(rate[d.name] - rate["MIN_RATE"]) /
+            (rate["MAX_RATE"] - rate["MIN_RATE"]);
+        console.log("getcolor-v-value: " + v);
+        if (isNaN(v) || v == -1) {
+          return colorRange(0.6);
+        }
+        return colorRange(v);
+      }
+    }
+    // NOTE:非value数值着色，使用颜色表前两值
+    if (changeable_color && !config.color_by_value) {
       var colorRange = d3.interpolateCubehelix(config.color_range[0], config.color_range[1]);
       if (divide_changeable_color_by_type && d["type"] in config.color_ranges) {
         var colorRange = d3.interpolateCubehelix(config.color_ranges[d["type"]][0], config.color_ranges[d["type"]][1]);
@@ -87,15 +123,26 @@ function draw(data) {
   var text_y = config.text_y;
   var itemLabel = config.itemLabel;
   var typeLabel = config.typeLabel;
+  var showMsgText = config.showMsgText; // NOTE:新增
+  var showLeftLabel = config.showLeftLabel; // NOTE:新增
+  var showRightLabel = config.showRightLabel; // NOTE:新增
+  var use_type_info = config.use_type_info; // NOTE:新增
+
   // 长度小于display_barInfo的bar将不显示barInfo
   var display_barInfo = config.display_barInfo;
   // 显示类型
-  if (config.use_type_info) {
-    var use_type_info = config.use_type_info;
-  } else if (divide_by != "name") {
-    var use_type_info = true;
+  // if (config.use_type_info) {
+  //   var use_type_info = config.use_type_info;
+  // } else if (divide_by != "name") {
+  //   var use_type_info = true;
+  // } else {
+  //   var use_type_info = false;
+  // }
+  // NOTE:新增use_type_info的新作用
+  if (divide_by !== "name") {
+    var use_type_divide = true;
   } else {
-    var use_type_info = false;
+    var use_type_divide = false;
   }
   // 使用计数器
   var use_counter = config.use_counter;
@@ -301,20 +348,40 @@ function draw(data) {
   }
 
   if (showMessage) {
-    // 左1文字
-    var topInfo = g
-      .insert("text")
-      .attr("class", "growth")
-      .attr("x", 0)
-      .attr("y", text_y)
-      .text(itemLabel);
-
-    // 右1文字
-    g.insert("text")
-      .attr("class", "growth")
-      .attr("x", text_x)
-      .attr("y", text_y)
-      .text(typeLabel);
+    // NOTE:新增控制是否显示顶部左右两侧文字
+    if (showLeftLabel && showRightLabel) {
+      // 左1文字
+      var topInfo = g
+          .insert("text")
+          .attr("class", "growth")
+          .attr("x", 0)
+          .attr("y", text_y)
+          .text(itemLabel);
+      // 右1文字
+      g.insert("text")
+          .attr("class", "growth")
+          .attr("x", text_x)
+          .attr("y", text_y)
+          .text(typeLabel);
+    }
+    if (showLeftLabel && !showRightLabel) {
+      // 左1文字
+      var topInfo = g
+          .insert("text")
+          .attr("class", "growth")
+          .attr("x", 0)
+          .attr("y", text_y)
+          .text(itemLabel);
+    }
+    if (!showLeftLabel && showRightLabel) {
+      // 右1文字
+      var topInfo = g
+          .insert("text")
+          .attr("class", "growth")
+          .attr("x", text_x)
+          .attr("y", text_y)
+          .text(typeLabel);
+    }
 
     // 榜首日期计数
     if (use_counter == true) {
@@ -711,11 +778,12 @@ function draw(data) {
       barInfo.tween("text", function (d) {
         var self = this;
         var str = d[divide_by] + "-" + d.name + "  数值:";
-
-        var i = d3.interpolate(
-            self.textContent.slice(str.length, 99),
-            Number(d.value)
-          ),
+        self.textContent = self.textContent.slice(str.length, 99)
+        // var i = d3.interpolate(
+        //     self.textContent.slice(str.length, 99),
+        //     Number(d.value)
+        //   ),
+        var i = d3.interpolate(deformat(self.textContent, config.postfix), Number(d.value)),
           prec = (Number(d.value) + "").split("."),
           round = prec.length > 1 ? Math.pow(10, prec[1].length) : 1;
         return function (t) {

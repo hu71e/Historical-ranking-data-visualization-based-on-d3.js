@@ -13,6 +13,10 @@
 
   // 控制是否显示顶部附加信息文字。
   showMessage: true,
+  // 新增控制是否显示顶部Label标签文字。
+  showMsgText: false,     // 顶部排名第一的name文字
+  showLeftLabel: true,    // 顶部左边Label文字
+  showRightLabel: false,  // 顶部右边Label文字
 
   // 时间自动排序。
   // !!!请确保打开此项时，使用的是标准日期格式！(即：YYYY-MM-DD HH:MM)
@@ -31,25 +35,33 @@
 
   // 类型根据什么字段区分？如果是name，则关闭类型显示
   divide_by: 'type',
+  // 新增如果divide_by:type，则可控制顶部右侧type文字是否显示
+  use_type_info: false,
 
   // 颜色根据什么字段区分？
-  divide_color_by: 'name',
+  // 新增可按照value数值区间num_range着色
+  divide_color_by: 'value',
 
-  // 字段的值与其对应的颜色值
+  // 若divide_color_by: 'value'，数值着色开关color_by_value打开有效
+  color_by_value: true,
+  // value数值着色依据
+  num_range: [99, 499, 999, 9999],
+
+  // name字段的值与其对应的颜色值
   color: {
     "Chinese": "#1177CC",
     "Japanese": "#667788"
   },
 
-  // 颜色渐变：颜色绑定增长率
-  changeable_color: false,
+  // 是否颜色渐变：颜色绑定增长率及value值区间着色
+  changeable_color: true,
 
   // 添加功能：不同类型的增长率所用渐变色不同(暗→亮)
   // 如果该项为false，那么所有条目全部按照color_range变色
   // 如果该项为true，那么按照src/color_ranges.js中的color_ranges变色，默认色板为color_range
   // 一个具体的设置模板见src/_color_ranges.js，将其更名为color_ranges.js再设置即可
   divide_changeable_color_by_type: false,
-  color_range: ['#ff7e5f', '#feb47b'],
+  color_range: ['#f2a88c', '#e26554', '#c9191a', '#751616'],
 
 
   // 附加信息内容。
@@ -128,13 +140,14 @@
   enter_from_0: true,
 
   // 如果所有数字都很大，导致拉不开差距则开启此项使得坐标原点变换为（最小值）*2-（最大值）
-  big_value: true,
+  big_value: false,
 
   // 如果要使用半对数坐标，则开启此项
-  use_semilogarithmic_coordinate: false,
+  use_semilogarithmic_coordinate: true,
 
   // barinfo太长？也许可以试试这个
-  long: false,
+  // long开启后第一行数值显示有BUG，修复见相应代码
+  long: true,
 
   // 延迟多少个时间节点开始
   wait: 0,
